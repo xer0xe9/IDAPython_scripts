@@ -9,24 +9,29 @@ exports = json.load(f)
 
 def resolve_CRC32Hash(xrefs_to):
     libHashDict = {}
-    hash = ""
+    crc32_hash = ""
     hash_addr = 0
     for addr in xrefs_to:
         if idc.GetOpType(idc.PrevHead(addr),1) == 5:
            hash_addr = idc.PrevHead(addr)
-           hash = idc.GetOpnd(idc.PrevHead(addr),1)
+           crc32_hash = idc.GetOpnd(idc.PrevHead(addr),1)
         elif idc.GetOpType(idc.PrevHead(idc.PrevHead(addr)),1) == 5:
            hash_addr = idc.PrevHead(idc.PrevHead(addr))
-           hash = idc.GetOpnd(idc.PrevHead(idc.PrevHead(addr)),1)
+           crc32_hash = idc.GetOpnd(idc.PrevHead(idc.PrevHead(addr)),1)
         elif idc.GetOpType(idc.PrevHead(idc.PrevHead(idc.PrevHead(addr))),1) == 5:
            hash_addr = idc.PrevHead(idc.PrevHead(idc.PrevHead(addr)))
-           hash = idc.GetOpnd(idc.PrevHead(idc.PrevHead(idc.PrevHead(addr))),1)
-    
-        # print hex(hash_addr)
+           crc32_hash = idc.GetOpnd(idc.PrevHead(idc.PrevHead(idc.PrevHead(addr))),1)
 
-        hash = "0x" + hash.split('h')[0]
-        libHashDict[hash.lower()] = hash_addr
-        
+        # print hex(hash_addr)
+        # sanitize hash value
+        if crc32_hash:
+           crc32_hash = crc32_hash[:-1]
+           if crc32_hash[0] == "0":
+              crc32_hash = crc32_hash[1:]
+           crc32_hash = "0x" + crc32_hash
+
+        libHashDict[crc32_hash.lower()] = hash_addr
+
     for key, value in libHashDict.items():
         if key in exports.keys():
            resolved = exports[key]
